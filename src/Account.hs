@@ -1,79 +1,62 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Account where
 
+import Address
+import Bank
 import Data.DateTime
-import Data.Label
 
 type Amount = Double
 
-data Bank = Bank
-  { _name :: String
-  } deriving (Show)
-
-data Address = Address
-  { _streetName :: String
-  , _houseNumber :: Int
-  } deriving (Show)
-
 data Account = Account
-  { _accountNumber :: String
-  , _accountName :: String
-  , _bank :: Bank
-  , _address :: Address
-  , _dateOpen :: DateTime
-  , _dateClosed :: Maybe DateTime
-  , _balance :: Amount
-  } deriving (Show)
+  { accountName :: String
+  , bank :: Bank
+  , address :: Address
+  , dateOpen :: DateTime
+  , dateClosed :: Maybe DateTime
+  , balance :: Amount
+  }
 
-data AccountError
-  = NotEnoughFunds
-  | AccountClosed
+instance Show Account where
+  show = do
+    n <- accountName
+    b <- show . bank
+    t <- show . balance
+    return $ n ++ " (" ++ b ++ "): $" ++ t
+
+data AccountServiceError
+  = NotEnoughFunds Account
+  | AccountClosed Account
   deriving (Show)
 
-mkLabels [''Bank, ''Address, ''Account]
-
+--
 isClosed :: Account -> Bool
 isClosed account
-  | get dateClosed account == Nothing = False
+  | dateClosed account == Nothing = False
   | otherwise = True
 
-debit :: Account -> Amount -> Either AccountError Account
+debit :: Account -> Amount -> Either AccountServiceError Account
 debit account amount
-  | isClosed account = Left AccountClosed
-  | currentBalance < amount = Left NotEnoughFunds
-  | otherwise = Right $ set balance (currentBalance - amount) account
+  | isClosed account = Left (AccountClosed account)
+  | currentBalance < amount = Left (NotEnoughFunds account)
+  | otherwise = Right $ account {balance = (currentBalance - amount)}
   where
-    currentBalance = get balance account
+    currentBalance = balance account
 
-credit :: Account -> Amount -> Either AccountError Account
+credit :: Account -> Amount -> Either AccountServiceError Account
 credit account amount
-  | isClosed account = Left AccountClosed
-  | otherwise = Right $ set balance (currentBalance + amount) account
+  | isClosed account = Left (AccountClosed account)
+  | otherwise = Right $ account {balance = currentBalance + amount}
   where
-    currentBalance = get balance account
+    currentBalance = balance account
 
-transfer :: Account -> Amount -> Account -> Either AccountError Account
-transfer source amount destination = do
+transfer ::
+     Account
+  -> Account
+  -> Amount
+  -> Either AccountServiceError (Account, Account)
+transfer source destination amount = do
   updatedSource <- debit source amount
-  _ <- credit destination amount
-  return updatedSource
+  updatedDestination <- credit destination amount
+  return (updatedSource, updatedDestination)
 
-close :: Account -> Account
-close = set dateClosed (Just today)
-
--- test data
-nab :: Bank
-nab = Bank "NAB"
-
-home :: Address
-home = Address "St. Kilda Road" 213
-
-today :: DateTime
-today = fromGregorian 2017 6 18 20 00 00
-
-rich :: Account
-rich = Account "r123" "Thiago" nab home today Nothing 10000
-
-poor :: Account
-poor = set balance 0 rich
+close :: Account -> DateTime -> Account
+close account when = account {dateClosed = (Just when)}
