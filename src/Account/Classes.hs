@@ -9,11 +9,12 @@ data AccountError
   deriving (Eq, Show)
 
 class Account a where
-  {-# MINIMAL (accountId, name, balance, credit, debit, close)
+  {-# MINIMAL (accountId, name, balance, updateBalance, close)
             , (isOpen | isClosed) #-}
   accountId :: a -> String
   name :: a -> String
   balance :: a -> Amount
+  updateBalance :: a -> (Amount -> Amount) -> a
   isOpen :: a -> Bool
   isClosed :: a -> Bool
   credit :: a -> Amount -> Either AccountError a
@@ -22,6 +23,13 @@ class Account a where
   close :: a -> DateTime -> Either AccountError a
   isOpen = not . isClosed
   isClosed = not . isOpen
+  credit account amount
+    | isClosed account = Left AccountClosed
+    | otherwise = Right $ updateBalance account (+ amount)
+  debit account amount
+    | isClosed account = Left AccountClosed
+    | balance account < amount = Left InsufficientFunds
+    | otherwise = Right $ updateBalance account (subtract amount)
   transfer source destination amount = do
     source' <- debit source amount
     destination' <- credit destination amount

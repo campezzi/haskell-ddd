@@ -5,5 +5,5 @@ import Lib
 
 main :: IO ()
 main = do
-  let result = transfer testCheckingAccount testSavingsAccount 1000
+  let result = transfer testCheckingAccount testSavingsAccount 100
   putStrLn $ either (("Error: " ++) . show) show result

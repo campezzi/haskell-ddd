@@ -23,13 +23,8 @@ instance Account SavingsAccount where
   isOpen account
     | sDateClosed account == Nothing = True
     | otherwise = False
-  credit account amount
-    | isClosed account = Left AccountClosed
-    | otherwise = Right $ account {sBalance = (balance account) + amount}
-  debit account amount
-    | isClosed account = Left AccountClosed
-    | balance account < amount = Left InsufficientFunds
-    | otherwise = Right $ account {sBalance = (balance account) - amount}
+  updateBalance account updateFunc =
+    account {sBalance = (updateFunc . balance) account}
   close account when
     | isClosed account = Left AccountClosed
     | otherwise = Right $ account {sDateClosed = Just when}
