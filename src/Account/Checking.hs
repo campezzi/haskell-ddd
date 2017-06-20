@@ -1,29 +1,27 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Account.Checking where
 
 import Account.Classes
 import Aliases
+import Control.Lens
 import Data.DateTime
 
 data CheckingAccount = CheckingAccount
-  { cId :: String
-  , cName :: String
-  , cBalance :: Amount
-  , cDateOpen :: DateTime
-  , cDateClosed :: Maybe DateTime
+  { _cAccountId :: String
+  , _cName :: String
+  , _cBalance :: Amount
+  , _cDateOpen :: DateTime
+  , _cDateClosed :: Maybe DateTime
   }
+
+makeLenses ''CheckingAccount
 
 instance Show CheckingAccount where
   show (CheckingAccount i n b _ _) = i ++ " - " ++ n ++ ": $" ++ (show b)
 
 instance Account CheckingAccount where
-  accountId = cId
+  accountId = cAccountId
   name = cName
   balance = cBalance
-  isOpen account
-    | cDateClosed account == Nothing = True
-    | otherwise = False
-  updateBalance account updateFunc amount =
-    account {cBalance = updateFunc (balance account) amount}
-  close account when
-    | isClosed account = Left AccountClosed
-    | otherwise = Right $ account {cDateClosed = Just when}
+  dateClosed = cDateClosed

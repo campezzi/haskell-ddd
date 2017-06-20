@@ -1,17 +1,22 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Account.Savings where
 
 import Account.Classes
 import Aliases
+import Control.Lens
 import Data.DateTime
 
 data SavingsAccount = SavingsAccount
-  { sId :: String
-  , sName :: String
-  , sBalance :: Amount
-  , sInterestRate :: InterestRate
-  , sDateOpen :: DateTime
-  , sDateClosed :: Maybe DateTime
+  { _sId :: String
+  , _sName :: String
+  , _sBalance :: Amount
+  , _sInterestRate :: InterestRate
+  , _sDateOpen :: DateTime
+  , _sDateClosed :: Maybe DateTime
   }
+
+makeLenses ''SavingsAccount
 
 instance Show SavingsAccount where
   show (SavingsAccount i n b _ _ _) = i ++ " - " ++ n ++ ": $" ++ (show b)
@@ -20,14 +25,7 @@ instance Account SavingsAccount where
   accountId = sId
   name = sName
   balance = sBalance
-  isOpen account
-    | sDateClosed account == Nothing = True
-    | otherwise = False
-  updateBalance account updateFunc amount =
-    account {sBalance = updateFunc (balance account) amount}
-  close account when
-    | isClosed account = Left AccountClosed
-    | otherwise = Right $ account {sDateClosed = Just when}
+  dateClosed = sDateClosed
 
 instance InterestBearingAccount SavingsAccount where
   interestRate = sInterestRate
