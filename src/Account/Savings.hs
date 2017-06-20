@@ -23,8 +23,8 @@ instance Account SavingsAccount where
   isOpen account
     | sDateClosed account == Nothing = True
     | otherwise = False
-  updateBalance account updateFunc =
-    account {sBalance = (updateFunc . balance) account}
+  updateBalance account updateFunc amount =
+    account {sBalance = updateFunc (balance account) amount}
   close account when
     | isClosed account = Left AccountClosed
     | otherwise = Right $ account {sDateClosed = Just when}

@@ -14,7 +14,7 @@ class Account a where
   accountId :: a -> String
   name :: a -> String
   balance :: a -> Amount
-  updateBalance :: a -> (Amount -> Amount) -> a
+  updateBalance :: a -> (Amount -> Amount -> Amount) -> Amount -> a
   isOpen :: a -> Bool
   isClosed :: a -> Bool
   credit :: a -> Amount -> Either AccountError a
@@ -25,11 +25,11 @@ class Account a where
   isClosed = not . isOpen
   credit account amount
     | isClosed account = Left AccountClosed
-    | otherwise = Right $ updateBalance account (+ amount)
+    | otherwise = Right $ updateBalance account (+) amount
   debit account amount
     | isClosed account = Left AccountClosed
     | balance account < amount = Left InsufficientFunds
-    | otherwise = Right $ updateBalance account (subtract amount)
+    | otherwise = Right $ updateBalance account subtract amount
   transfer source destination amount = do
     source' <- debit source amount
     destination' <- credit destination amount
