@@ -18,7 +18,7 @@ class Account a where
   isClosed :: a -> Bool
   credit :: a -> Amount -> Either AccountError a
   debit :: a -> Amount -> Either AccountError a
-  transfer :: a -> a -> Amount -> Either AccountError (a, a)
+  transfer :: Account b => a -> b -> Amount -> Either AccountError (a, b)
   close :: a -> DateTime -> Either AccountError a
   isOpen = not . isClosed
   isClosed = not . isOpen
