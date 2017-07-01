@@ -20,7 +20,7 @@ library
                      , Account.Checking
                      , Account.Savings
                      , Aliases
-  build-depends:       base >= 4.7 && < 5, datetime, lens
+  build-depends:       base >= 4.7 && < 5, datetime, lens, validation
   default-language:    Haskell2010
 
 executable ddd-exe
