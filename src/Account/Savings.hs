@@ -11,6 +11,7 @@ import Aliases
 import Control.Lens
 import Data.DateTime
 import Data.Validation (AccValidation(..))
+import ErrorList
 
 data ValidationError
   = AccountIdTooShort
@@ -43,22 +44,22 @@ instance Account SavingsAccount where
 instance InterestBearingAccount SavingsAccount where
   interestRate = sInterestRate
 
-validateId :: String -> AccValidation [ValidationError] String
+validateId :: String -> AccValidation (ErrorList ValidationError) String
 validateId aId
-  | length aId < 10 = AccFailure [AccountIdTooShort]
+  | length aId < 10 = AccFailure $ ErrorList [AccountIdTooShort]
   | otherwise = AccSuccess aId
 
 validateInterestRate ::
-     InterestRate -> AccValidation [ValidationError] InterestRate
+     InterestRate -> AccValidation (ErrorList ValidationError) InterestRate
 validateInterestRate interest
-  | interest <= 0 = AccFailure [NegativeInterest]
+  | interest <= 0 = AccFailure $ ErrorList [NegativeInterest]
   | otherwise = AccSuccess interest
 
 savingsAccount ::
      String
   -> InterestRate
   -> DateTime
-  -> AccValidation [ValidationError] SavingsAccount
+  -> AccValidation (ErrorList ValidationError) SavingsAccount
 savingsAccount aId interest date =
   SavingsAccount <$> validateId aId <*> AccSuccess "Savings Account" <*>
   AccSuccess 0 <*>
