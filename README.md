@@ -19,7 +19,7 @@ This repo contains random pieces of code loosely related to the book [Functional
 
 - Functions that return monads can be composed just like regular functions with Kleisli composition; in Haskell, this is done with the `>=>` and `<=<` operators, ie. `(a -> m b) >=> (b -> m c) -> (a -> m c)`.
 
-- The first step when modeling a domain service is defining its algebra (ie. a type class), expressed in terms of functions and types that follow the ubiquitous language. The actual types and concrete instances of the service come later.
+- The first step when modeling a domain service is defining its algebra (ie. a group of operations), expressed in terms of functions and types that follow the ubiquitous language. The actual types and concrete instances of the service come later.
 
 - If a domain service is used to represent a business process, its algebra should define functions that reflect the operations contained in that process. Pay special attention to function types so they "align", maximizing opportunities for composition.
 
