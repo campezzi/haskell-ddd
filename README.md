@@ -22,3 +22,5 @@ This repo contains random pieces of code loosely related to the book [Functional
 - The first step when modeling a domain service is defining its algebra (ie. a type class), expressed in terms of functions and types that follow the ubiquitous language. The actual types and concrete instances of the service come later.
 
 - If a domain service is used to represent a business process, its algebra should define functions that reflect the operations contained in that process. Pay special attention to function types so they "align", maximizing opportunities for composition.
+
+- Once the invariants of a service have been defined, use the type system to try and enforce them statically, ie. with phantom types. The ultimate goal is to make any code that would cause a business invariant violation to not even compile.
