@@ -8,6 +8,8 @@ This repo contains random pieces of code loosely related to the book [Functional
 
 - Defining entities in terms of a type class + a concrete type that implements it seems a bit heavy-handed at first, but pays of in the long run if polymorphism suddenly becomes necessary (or if the data type needs to be extended to "behave like" something else). This is the "I" on SOLID applied to FP. Not 100% convinced this is the best way to go as it may increase complexity early on, but it makes sense to at least consider.
 
+- "Smart constructors": hiding the default data constructors for a type and providing custom functions to replace them is good practice as it makes it impossible to create entities/values that do not make sense from a business point of view (ie. a date range where the end date happens before the start date).
+
 - Get well acquainted with the basics of category theory and learn to spot opportunities to use certain common abstractions. These are particularly useful:
   - `Semigroup`: useful when two values of a type have to be combined;
   - `Monoid`: useful when two values of a type have to be combined and an "identity" value is required (ie. as the initial accumulator value in a fold operation);
