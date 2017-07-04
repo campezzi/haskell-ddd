@@ -22,10 +22,12 @@ library
                      , Aliases
                      , ErrorList
                      , LoanApplication
+                     , AccountRepository
   build-depends:       base >= 4.7 && < 5
                      , datetime
                      , lens
                      , validation
+                     , containers
   default-language:    Haskell2010
 
 executable ddd-exe
@@ -36,6 +38,7 @@ executable ddd-exe
                      , ddd
                      , datetime
                      , validation
+                     , containers
   default-language:    Haskell2010
 
 test-suite ddd-test
