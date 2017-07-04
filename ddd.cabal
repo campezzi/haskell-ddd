@@ -22,7 +22,10 @@ library
                      , Aliases
                      , ErrorList
                      , LoanApplication
-  build-depends:       base >= 4.7 && < 5, datetime, lens, validation
+  build-depends:       base >= 4.7 && < 5
+                     , datetime
+                     , lens
+                     , validation
   default-language:    Haskell2010
 
 executable ddd-exe
