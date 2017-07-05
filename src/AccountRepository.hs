@@ -1,5 +1,3 @@
-{-# LANGUAGE ExistentialQuantification #-}
-
 module AccountRepository where
 
 import Data.Map (Map, (!), fromList, insert, lookup)
