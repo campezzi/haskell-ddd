@@ -3,7 +3,9 @@
 module AccountRepositoryF where
 
 import Control.Monad.Free
-import Data.Map (Map, delete, fromList, insert, lookup)
+import Control.Monad.Trans.Class
+import Control.Monad.Trans.State
+import Data.Map (Map, delete, empty, insert, lookup)
 import Prelude hiding (lookup)
 
 data AnAccount = AnAccount
@@ -11,7 +13,7 @@ data AnAccount = AnAccount
   , accName :: String
   } deriving (Show)
 
-data AccountRepoF next
+data AccountRepoActionF next
   = Query String
           (AnAccount -> next)
   | Store AnAccount
@@ -20,68 +22,72 @@ data AccountRepoF next
            next
   deriving (Functor)
 
-type AccountRepo = Free AccountRepoF
+type AccountRepoAction = Free AccountRepoActionF
 
-query :: String -> AccountRepo AnAccount
+query :: String -> AccountRepoAction AnAccount
 query accountNumber = liftF $ Query accountNumber id
 
-store :: AnAccount -> AccountRepo ()
+store :: AnAccount -> AccountRepoAction ()
 store account = liftF $ Store account ()
 
-remove :: String -> AccountRepo ()
+remove :: String -> AccountRepoAction ()
 remove accountNumber = liftF $ Remove accountNumber ()
 
-update :: String -> (AnAccount -> AnAccount) -> AccountRepo ()
+update :: String -> (AnAccount -> AnAccount) -> AccountRepoAction ()
 update accountNumber f = do
   account <- query accountNumber
   store (f account)
 
-open :: String -> String -> AccountRepo AnAccount
+open :: String -> String -> AccountRepoAction AnAccount
 open number name = do
   store $ AnAccount number name
   account <- query number
   return account
 
 --
+type InMemoryRepo = Map String AnAccount
+
+type InMemoryRepoState = StateT InMemoryRepo (Either [String])
+
+apply :: AccountRepoAction a -> InMemoryRepoState a
+apply action =
+  case action of
+    Free (Query accountNumber next) -> do
+      account <- state $ \s -> (lookup accountNumber s, s)
+      case account of
+        Nothing -> lift $ Left ["Account does not exist"]
+        Just x -> apply (next x)
+    Free (Store account next) ->
+      (state $ \s -> ((), insert (accNumber account) account s)) >> apply next
+    Free (Remove accountNumber next) ->
+      (state $ \s -> ((), delete accountNumber s)) >> apply next
+    Pure a -> return a
+
+--
+emptyRepo :: InMemoryRepo
+emptyRepo = empty
+
 anAccount :: AnAccount
 anAccount = AnAccount "123" "Thiago"
 
---
-render :: (Show r) => AccountRepo r -> String
-render (Free (Query _ fr)) = "query\n" ++ render (fr (AnAccount "" ""))
-render (Free (Store _ r)) = "store\n" ++ render r
-render (Free (Remove _ r)) = "delete\n" ++ render r
-render (Pure _) = "return\n"
+changeName :: String -> AnAccount -> AnAccount
+changeName name account = account {accName = name}
 
-pretty :: (Show r) => AccountRepo r -> IO ()
-pretty = putStr . render
-
---
-class AccountRepository r where
-  apply :: AccountRepo a -> r -> r
-
-data MapRepo =
-  MapRepo (Map String AnAccount)
-  deriving (Show)
-
-instance AccountRepository MapRepo where
-  apply action r@(MapRepo repo) =
-    case action of
-      Free (Query accountNumber next) ->
-        case lookup accountNumber repo of
-          Nothing -> r
-          Just account -> apply (next account) r
-      Free (Store account next) -> apply next updatedRepo
-        where updatedRepo = MapRepo $ insert (accNumber account) account repo
-      Free (Remove accountNumber next) -> apply next updatedRepo
-        where updatedRepo = MapRepo $ delete accountNumber repo
-      Pure _ -> r
-
---
-emptyRepo :: MapRepo
-emptyRepo = MapRepo (fromList [])
-
-testComp :: AccountRepo AnAccount
-testComp = do
+testCompS :: AccountRepoAction ()
+testCompS = do
   open "123" "Thiago"
   open "456" "Campezzi"
+  remove "456"
+  open "789" "Mr. Bean"
+  update "123" (changeName "Mr. Happy")
+
+testCompF :: AccountRepoAction ()
+testCompF = do
+  query "abc"
+  testCompS
+
+testApplyS :: Either [String] ((), InMemoryRepo)
+testApplyS = runStateT (apply testCompS) emptyRepo
+
+testApplyF :: Either [String] ((), InMemoryRepo)
+testApplyF = runStateT (apply testCompF) emptyRepo
