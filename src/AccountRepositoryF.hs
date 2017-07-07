@@ -53,14 +53,14 @@ apply :: AccountRepoAction a -> InMemoryRepoState a
 apply action =
   case action of
     Free (Query accountNumber next) -> do
-      account <- state $ \s -> (lookup accountNumber s, s)
-      case account of
+      maybeAccount <- gets (lookup accountNumber)
+      case maybeAccount of
         Nothing -> lift $ Left ["Account does not exist"]
-        Just x -> apply (next x)
+        Just account -> apply (next account)
     Free (Store account next) ->
-      (state $ \s -> ((), insert (accNumber account) account s)) >> apply next
+      (modify $ insert (accNumber account) account) >> apply next
     Free (Remove accountNumber next) ->
-      (state $ \s -> ((), delete accountNumber s)) >> apply next
+      (modify $ delete accountNumber) >> apply next
     Pure a -> return a
 
 --
