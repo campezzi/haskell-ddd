@@ -1,4 +1,7 @@
 {-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FunctionalDependencies #-}
 
 module AccountRepositoryF where
 
@@ -45,23 +48,27 @@ open number name = do
   return account
 
 --
+class AccountRepository r where
+  apply :: AccountRepoAction a -> r a
+
+--
 type InMemoryRepo = Map String AnAccount
 
 type InMemoryRepoState = StateT InMemoryRepo (Either [String])
 
-apply :: AccountRepoAction a -> InMemoryRepoState a
-apply action =
-  case action of
-    Free (Query accountNumber next) -> do
-      maybeAccount <- gets (lookup accountNumber)
-      case maybeAccount of
-        Nothing -> lift $ Left ["Account does not exist"]
-        Just account -> apply (next account)
-    Free (Store account next) ->
-      (modify $ insert (accNumber account) account) >> apply next
-    Free (Remove accountNumber next) ->
-      (modify $ delete accountNumber) >> apply next
-    Pure a -> return a
+instance AccountRepository InMemoryRepoState where
+  apply action =
+    case action of
+      Free (Query accountNumber next) -> do
+        maybeAccount <- gets (lookup accountNumber)
+        case maybeAccount of
+          Nothing -> lift $ Left ["Account does not exist"]
+          Just account -> apply (next account)
+      Free (Store account next) ->
+        (modify $ insert (accNumber account) account) >> apply next
+      Free (Remove accountNumber next) ->
+        (modify $ delete accountNumber) >> apply next
+      Pure a -> return a
 
 --
 emptyRepo :: InMemoryRepo
