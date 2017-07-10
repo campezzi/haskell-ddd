@@ -20,9 +20,20 @@ This repo contains random pieces of code loosely related to the book [Functional
 - When figuring out which algebra to use, pick the weakest (most generic) possible to maximize reuse opportunities. This is particularly important when picking between using `Applicative` or `Monad` as the parallelizable nature of `Applicative` may also lead to performance improvements.
 
 - Functions that return monads can be composed just like regular functions with Kleisli composition; in Haskell, this is done with the `>=>` and `<=<` operators, ie. `(a -> m b) >=> (b -> m c) -> (a -> m c)`.
+  - The Kleisli data type can be used to represent a computation that is waiting for a value to run and produce another value. Since Kleisli is a monad, operations of this type can be composed together in larger operations and then be all triggered at once by passing in the "missing" value;
+  - The most common type of Kleisli seen in the wild is the `Reader` monad, which is usually used to inject environment configuration into a group of operations (ie. a database, global configuration parameters, a logger, etc);
+  - The `State` monad is also a common specialization of Kleisli, and is used to inject some state (that can be modified) into a group of operations
 
 - The first step when modeling a domain service is defining its algebra (ie. a group of operations), expressed in terms of functions and types that follow the ubiquitous language. The actual types and concrete instances of the service come later.
 
 - If a domain service is used to represent a business process, its algebra should define functions that reflect the operations contained in that process. Pay special attention to function types so they "align", maximizing opportunities for composition.
 
 - Once the invariants of a service have been defined, use the type system to try and enforce them statically, ie. with phantom types. The ultimate goal is to make any code that would cause a business invariant violation to not even compile.
+
+- Separate code in modules and be mindful what they export. Ideally, a module will only export data types and functions that follow the ubiquitous language. Modules can also be used to enforce business invariants (ie. by not exporting default data constructors, providing smart constructors instead).
+
+- The book recommends exporting the algebra of a service in a module and its specific implementations in a separate module to allow for easy swapping of implementations in different contexts (ie. testing). Again, not 100% convinced that type classes should be used this much as it adds heaps of boilerplate and noise to an otherwise simple scenario.
+
+- Another way of separating algebra from implementation is using the `Free Monad` pattern. In that case, the module would expose composable, domain-specific functions that can be used as building blocks to a bigger computation, representing that computation as data (without actually performing it). Then, different interpreters can be written to actually execute the computation in whatever way they choose.
+  - Free monads can be used to model operations that would normally be impure in a pure way by pushing the actual impurity down the line, to the interpreter level
+  - Free monads are difficult to understand and grasp, so consider that before using them all over the place
