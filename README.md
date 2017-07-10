@@ -37,3 +37,9 @@ This repo contains random pieces of code loosely related to the book [Functional
 - Another way of separating algebra from implementation is using the `Free Monad` pattern. In that case, the module would expose composable, domain-specific functions that can be used as building blocks to a bigger computation, representing that computation as data (without actually performing it). Then, different interpreters can be written to actually execute the computation in whatever way they choose.
   - Free monads can be used to model operations that would normally be impure in a pure way by pushing the actual impurity down the line, to the interpreter level
   - Free monads are difficult to understand and grasp, so consider that before using them all over the place
+
+- Large applications are composed of multiple bounded contexts that often have to work together to achieve a meaningful purpose. Reactive models accept and embrace that fact by making the interactions between those contexts explicit, aiming for loose coupling, fault-tolerance and resilience. There are several strategies to achieve that, for example:
+  - `Future`/`Promise` based APIs
+  - Asynchronous messaging through `Message Queues`
+  - `Streams` with demand-driven interaction between producers and consumers
+  - Lightweight `Actors` with mailboxes and message-passing
