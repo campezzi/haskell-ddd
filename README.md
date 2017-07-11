@@ -43,3 +43,7 @@ This repo contains random pieces of code loosely related to the book [Functional
   - Asynchronous messaging through `Message Queues`
   - `Streams` with demand-driven interaction between producers and consumers
   - Lightweight `Actors` with mailboxes and message-passing
+
+- By design, actors aren't great at maintaining type safety and referential transparency. They're used for supervision, which means exceptions outside of the control of the application could happen at runtime. In strong typed languages like Haskell and Scala, they might not be the best choice - consider alternatives.
+
+- Erlang (and by extension Elixir) are completely built on top of actors and use that as the single strategy for parallelism. In those languages, actors can be pushed to do more - for example, domain entities can be modeled as actors. This can be particularly helpful with event sourcing and CQRS approaches. _TODO: explore this concept in an Elixir repo._
